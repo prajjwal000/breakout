@@ -1,46 +1,46 @@
 #include "raylib.h"
 
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
 int main(void)
 {
-    // Initialization
-    //--------------------------------------------------------------------------------------
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+  // Initialization
+  //--------------------------------------------------------------------------------------
+  const int screenWidth = 800;
+  const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+  float wallWidth = screenWidth / 100.0;
 
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
+  InitWindow(screenWidth, screenHeight, "Breakout");
 
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
-        // Update
-        //----------------------------------------------------------------------------------
-        // TODO: Update your variables here
-        //----------------------------------------------------------------------------------
+  SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+  //--------------------------------------------------------------------------------------
 
-        // Draw
-        //----------------------------------------------------------------------------------
-        BeginDrawing();
+  // Main game loop
+  while (!WindowShouldClose()) 
+  {
+    // Update variables
+    //----------------------------------------------------------------------------------
 
-            ClearBackground(RAYWHITE);
 
-            DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+    // Draw
+    //----------------------------------------------------------------------------------
+    BeginDrawing();
 
-        EndDrawing();
-        //----------------------------------------------------------------------------------
-    }
+    ClearBackground(RAYWHITE);
+        // Draw walls
+        DrawRectangle(0, 0, screenWidth, wallWidth, LIGHTGRAY);
+        DrawRectangle(0, 0, wallWidth, screenHeight, LIGHTGRAY);
+        DrawRectangle(screenWidth - wallWidth, 0, wallWidth, screenHeight, LIGHTGRAY);
 
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    CloseWindow();        // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
 
-    return 0;
+
+    EndDrawing();
+    //----------------------------------------------------------------------------------
+  }
+
+  // De-Initialization
+  //--------------------------------------------------------------------------------------
+  CloseWindow(); // Close window and OpenGL context
+  //--------------------------------------------------------------------------------------
+
+  return 0;
 }
-
-
