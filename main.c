@@ -38,12 +38,14 @@ int main(void)
   ball.pos.x = (screenWidth - ballRadius) / 2;
   ball.pos.y = (screenHeight - ballRadius) / 2;
   ball.radius = ballRadius;
-  ball.speed.x = rand() % 20;
-  ball.speed.y = rand() % 20;
+  ball.speed.x = 100 + rand() % 20;
+  ball.speed.y = ball.speed.x;
   // Wall
-  Rectangle walls[3] = {{0, 0, screenWidth, genWidth},
-                        {0, 0, genWidth, screenHeight},
-                        {screenWidth - genWidth, 0, genWidth, screenHeight}};
+  Rectangle walls[3] = {
+      {0, 0, genWidth, screenHeight},
+      {screenWidth - genWidth, 0, genWidth, screenHeight},
+      {0, 0, screenWidth, genWidth},
+  };
 
   InitWindow(screenWidth, screenHeight, "Breakout");
 
@@ -65,7 +67,16 @@ int main(void)
     {
       paddle.speed = SPEED;
     }
-
+    if (CheckCollisionCircleRec(ball.pos, ball.radius, walls[0]) ||
+        CheckCollisionCircleRec(ball.pos, ball.radius, walls[1]))
+    {
+      ball.speed.x *= -1;
+    }
+    if (CheckCollisionCircleRec(ball.pos, ball.radius, walls[2]) ||
+        CheckCollisionCircleRec(ball.pos, ball.radius, paddle.Rec))
+    {
+      ball.speed.y *= -1;
+    }
 
     paddle.Rec.x += paddle.speed * delta;
     ball.pos.x += ball.speed.x * delta;
