@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include <stdio.h>
+#include <stdlib.h>
 #define SPEED 400
 
 typedef struct Paddle
@@ -7,6 +8,13 @@ typedef struct Paddle
   Rectangle Rec;
   float speed;
 } Paddle;
+
+typedef struct Ball
+{
+  Vector2 pos;
+  float radius;
+  Vector2 speed;
+} Ball;
 
 int main(void)
 {
@@ -17,12 +25,25 @@ int main(void)
 
   const float genWidth = screenWidth / 80.0;
   const float paddleWidth = screenWidth / 5.0;
+  const float ballRadius = screenWidth / 80.0;
+  // Paddle
   Paddle paddle = {0};
   paddle.Rec.x = (screenWidth - paddleWidth) / 2;
   paddle.Rec.y = screenHeight - genWidth;
   paddle.Rec.width = paddleWidth;
   paddle.Rec.height = genWidth;
   paddle.speed = 0;
+  // Ball
+  Ball ball = {0};
+  ball.pos.x = (screenWidth - ballRadius) / 2;
+  ball.pos.y = (screenHeight - ballRadius) / 2;
+  ball.radius = ballRadius;
+  ball.speed.x = rand() % 20;
+  ball.speed.y = rand() % 20;
+  // Wall
+  Rectangle walls[3] = {{0, 0, screenWidth, genWidth},
+                        {0, 0, genWidth, screenHeight},
+                        {screenWidth - genWidth, 0, genWidth, screenHeight}};
 
   InitWindow(screenWidth, screenHeight, "Breakout");
 
@@ -45,7 +66,10 @@ int main(void)
       paddle.speed = SPEED;
     }
 
+
     paddle.Rec.x += paddle.speed * delta;
+    ball.pos.x += ball.speed.x * delta;
+    ball.pos.y += ball.speed.y * delta;
 
     // Draw
     //----------------------------------------------------------------------------------
@@ -53,10 +77,10 @@ int main(void)
 
     ClearBackground(RAYWHITE);
     // Draw walls
-    DrawRectangle(0, 0, screenWidth, genWidth, LIGHTGRAY);
-    DrawRectangle(0, 0, genWidth, screenHeight, LIGHTGRAY);
-    DrawRectangle(screenWidth - genWidth, 0, genWidth, screenHeight, LIGHTGRAY);
-    printf("Rectangle x : %f, y: %f\n", paddle.Rec.x, paddle.Rec.y);
+    DrawRectangleRec(walls[0], LIGHTGRAY);
+    DrawRectangleRec(walls[1], LIGHTGRAY);
+    DrawRectangleRec(walls[2], LIGHTGRAY);
+    DrawCircleV(ball.pos, ball.radius, GRAY);
     DrawRectangleRec(paddle.Rec, DARKPURPLE);
 
     EndDrawing();
