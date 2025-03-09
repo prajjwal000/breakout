@@ -79,6 +79,10 @@ int main(void)
     }
 
     paddle.Rec.x += paddle.speed * delta;
+    if (CheckCollisionRecs(paddle.Rec, walls[0]) || CheckCollisionRecs(paddle.Rec, walls[1]))
+    {
+      paddle.Rec.x -= paddle.speed * delta;
+    }
     ball.pos.x += ball.speed.x * delta;
     ball.pos.y += ball.speed.y * delta;
 
