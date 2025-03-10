@@ -38,8 +38,8 @@ int main(void)
   ball.pos.x = (screenWidth - ballRadius) / 2;
   ball.pos.y = (screenHeight - ballRadius) / 2;
   ball.radius = ballRadius;
-  ball.speed.x = 100 + rand() % 20;
-  ball.speed.y = ball.speed.x;
+  ball.speed.x = 200 + rand() % 20;
+  ball.speed.y = 150 + rand() % 20;
   // Wall
   Rectangle walls[3] = {
       {0, 0, genWidth, screenHeight},
@@ -59,6 +59,15 @@ int main(void)
     paddle.speed = 0;
     // Update variables
     //----------------------------------------------------------------------------------
+    if (IsKeyDown(KEY_R))
+    {
+      paddle.Rec.x = (screenWidth - paddleWidth) / 2;
+      paddle.Rec.y = screenHeight - genWidth;
+      ball.pos.x = (screenWidth - ballRadius) / 2;
+      ball.pos.y = (screenHeight - ballRadius) / 2;
+      ball.speed.x = (200 + rand() % 20) * (1 - 2 * (rand() % 2));
+      ball.speed.y = 150 + rand() % 20;
+    }
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
       paddle.speed = -SPEED;
