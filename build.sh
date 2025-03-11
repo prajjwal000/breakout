@@ -1,5 +1,5 @@
 #!/bin/bash
 
-gcc -g -Wall main.c -lraylib -lm
+gcc -g -Wall -O0 main.c -lraylib -lm
 
 ./a.out

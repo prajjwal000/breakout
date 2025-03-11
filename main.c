@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #define SPEED 400
 
 typedef struct Paddle
@@ -16,16 +17,40 @@ typedef struct Ball
   Vector2 speed;
 } Ball;
 
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+const float genWidth = screenWidth / 80.0;
+const float paddleWidth = screenWidth / 5.0;
+const float ballRadius = screenWidth / 80.0;
+
+void Reset(Ball *ball, Paddle *paddle)
+{
+  paddle->Rec.x = (screenWidth - paddleWidth) / 2;
+  paddle->Rec.y = screenHeight - genWidth;
+  ball->pos.x = (screenWidth - ballRadius) / 2;
+  ball->pos.y = (screenHeight - ballRadius) / 2;
+  ball->speed.x = (200 + rand() % 20) * (1 - 2 * (rand() % 2));
+  ball->speed.y = 150 + rand() % 20;
+  for (int i = 3; i > 0; i--)
+  {
+    time_t timer = time(NULL);
+    while (time(NULL) - timer < 1) // Wait for 1 second
+    {
+      BeginDrawing();
+      ClearBackground(LIGHTGRAY);
+      char buf[3]; // Buffer size should be enough for 2 digits and null terminator
+      sprintf(buf, "%d", i);
+      DrawText(buf, screenWidth / 2.0 - 10, screenHeight / 2.0 - 10, 40, GRAY);
+      EndDrawing();
+    }
+  }
+}
+
 int main(void)
 {
   // Initialization
   //--------------------------------------------------------------------------------------
-  const int screenWidth = 800;
-  const int screenHeight = 450;
-
-  const float genWidth = screenWidth / 80.0;
-  const float paddleWidth = screenWidth / 5.0;
-  const float ballRadius = screenWidth / 80.0;
   // Paddle
   Paddle paddle = {0};
   paddle.Rec.x = (screenWidth - paddleWidth) / 2;
@@ -61,12 +86,7 @@ int main(void)
     //----------------------------------------------------------------------------------
     if (IsKeyDown(KEY_R))
     {
-      paddle.Rec.x = (screenWidth - paddleWidth) / 2;
-      paddle.Rec.y = screenHeight - genWidth;
-      ball.pos.x = (screenWidth - ballRadius) / 2;
-      ball.pos.y = (screenHeight - ballRadius) / 2;
-      ball.speed.x = (200 + rand() % 20) * (1 - 2 * (rand() % 2));
-      ball.speed.y = 150 + rand() % 20;
+      Reset(&ball, &paddle);
     }
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
