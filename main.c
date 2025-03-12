@@ -17,6 +17,11 @@ typedef struct Ball
   Vector2 speed;
 } Ball;
 
+typedef struct Brick
+{
+  Rectangle Rec;
+} Brick;
+
 const int screenWidth = 800;
 const int screenHeight = 450;
 
@@ -72,6 +77,16 @@ int main(void)
       {0, 0, screenWidth, genWidth},
   };
 
+  // Bricks
+  Brick bricks[5];
+  for (int i = 0; i < 5; i++)
+  {
+    bricks[i].Rec.height = 30;
+    bricks[i].Rec.width = 100;
+    bricks[i].Rec.x = 20 + i * 110;
+    bricks[i].Rec.y = 100;
+  }
+
   InitWindow(screenWidth, screenHeight, "Breakout");
 
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
@@ -124,6 +139,10 @@ int main(void)
     DrawRectangleRec(walls[0], LIGHTGRAY);
     DrawRectangleRec(walls[1], LIGHTGRAY);
     DrawRectangleRec(walls[2], LIGHTGRAY);
+    for (int i = 0; i < 5; i++)
+    {
+      DrawRectangleRec(bricks[i].Rec, RED);
+    }
     DrawCircleV(ball.pos, ball.radius, GRAY);
     DrawRectangleRec(paddle.Rec, DARKPURPLE);
 
