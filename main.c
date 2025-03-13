@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <time.h>
 #define SPEED 400
+#define SIDE 1
+#define VERTICAL 2
+#define HIDE 1
+#define SHOW 0
 
 typedef struct Paddle
 {
@@ -20,6 +24,7 @@ typedef struct Ball
 typedef struct Brick
 {
   Rectangle Rec;
+  int state;
 } Brick;
 
 const int screenWidth = 800;
@@ -52,6 +57,25 @@ void Reset(Ball *ball, Paddle *paddle)
   }
 }
 
+int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    if (!CheckCollisionCircleRec(ball.pos, ball.radius, bricks[i].Rec))
+    {
+      continue;
+    }
+    bricks[i].state = HIDE;
+    if (ball.pos.y + ball.radius == bricks[i].Rec.y ||
+        ball.pos.y - ball.radius == bricks[i].Rec.y + bricks[i].Rec.height)
+    {
+      return VERTICAL;
+    }
+    return SIDE;
+  }
+  return 0;
+}
+
 int main(void)
 {
   // Initialization
@@ -78,8 +102,8 @@ int main(void)
   };
 
   // Bricks
-  Brick bricks[5];
-  for (int i = 0; i < 5; i++)
+  Brick bricks[7] = {0};
+  for (int i = 0; i < 7; i++)
   {
     bricks[i].Rec.height = 30;
     bricks[i].Rec.width = 100;
@@ -111,6 +135,9 @@ int main(void)
     {
       paddle.speed = SPEED;
     }
+
+    // Collision
+    //----------------------------------------------------------------------------------
     if (CheckCollisionCircleRec(ball.pos, ball.radius, walls[0]) ||
         CheckCollisionCircleRec(ball.pos, ball.radius, walls[1]))
     {
@@ -118,6 +145,15 @@ int main(void)
     }
     if (CheckCollisionCircleRec(ball.pos, ball.radius, walls[2]) ||
         CheckCollisionCircleRec(ball.pos, ball.radius, paddle.Rec))
+    {
+      ball.speed.y *= -1;
+    }
+
+    if (CheckCollisionBallBrick(ball, bricks, 7) == SIDE)
+    {
+      ball.speed.x *= -1;
+    }
+    if (CheckCollisionBallBrick(ball, bricks, 7) == VERTICAL)
     {
       ball.speed.y *= -1;
     }
@@ -139,9 +175,12 @@ int main(void)
     DrawRectangleRec(walls[0], LIGHTGRAY);
     DrawRectangleRec(walls[1], LIGHTGRAY);
     DrawRectangleRec(walls[2], LIGHTGRAY);
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 7; i++)
     {
-      DrawRectangleRec(bricks[i].Rec, RED);
+      if (bricks[i].state == SHOW)
+      {
+        DrawRectangleRec(bricks[i].Rec, RED);
+      }
     }
     DrawCircleV(ball.pos, ball.radius, GRAY);
     DrawRectangleRec(paddle.Rec, DARKPURPLE);
