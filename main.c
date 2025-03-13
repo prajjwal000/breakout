@@ -34,8 +34,12 @@ const float genWidth = screenWidth / 80.0;
 const float paddleWidth = screenWidth / 5.0;
 const float ballRadius = screenWidth / 80.0;
 
-void Reset(Ball *ball, Paddle *paddle)
+void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n)
 {
+  for (int i = 0; i < n; i++)
+  {
+    bricks[i].state = SHOW;
+  }
   paddle->Rec.x = (screenWidth - paddleWidth) / 2;
   paddle->Rec.y = screenHeight - genWidth;
   ball->pos.x = (screenWidth - ballRadius) / 2;
@@ -61,7 +65,7 @@ int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
 {
   for (int i = 0; i < n; i++)
   {
-    if (!CheckCollisionCircleRec(ball.pos, ball.radius, bricks[i].Rec))
+    if (bricks[i].state == HIDE || !CheckCollisionCircleRec(ball.pos, ball.radius, bricks[i].Rec))
     {
       continue;
     }
@@ -125,7 +129,7 @@ int main(void)
     //----------------------------------------------------------------------------------
     if (IsKeyDown(KEY_R))
     {
-      Reset(&ball, &paddle);
+      Reset(&ball, &paddle, bricks, 7);
     }
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
