@@ -1,9 +1,10 @@
 #include "raylib.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #define SPEED 400
-#define SIDE 1
+#define HORIZONTAL 1
 #define VERTICAL 2
 #define HIDE 1
 #define SHOW 0
@@ -65,17 +66,38 @@ int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
 {
   for (int i = 0; i < n; i++)
   {
-    if (bricks[i].state == HIDE || !CheckCollisionCircleRec(ball.pos, ball.radius, bricks[i].Rec))
+    if (bricks[i].state == HIDE)
     {
       continue;
     }
-    bricks[i].state = HIDE;
-    if (ball.pos.y + ball.radius == bricks[i].Rec.y ||
-        ball.pos.y - ball.radius == bricks[i].Rec.y + bricks[i].Rec.height)
+
+    Rectangle brick = bricks[i].Rec;
+
+    float recCenterX = brick.x + brick.width / 2.0f;
+    float recCenterY = brick.y + brick.height / 2.0f;
+
+    float dx = fabsf(ball.pos.x - recCenterX);
+    float dy = fabsf(ball.pos.y - recCenterY);
+
+    if (dx > (brick.width / 2.0f + ball.radius))
     {
+      continue;
+    }
+    if (dy > (brick.height / 2.0f + ball.radius))
+    {
+      continue;
+    }
+
+    if (fabsf(dy - brick.height / 2.0f) / brick.height < fabsf(dx - brick.width / 2.0f) / brick.width)
+    {
+      bricks[i].state = HIDE;
       return VERTICAL;
     }
-    return SIDE;
+    else
+    {
+      bricks[i].state = HIDE;
+      return HORIZONTAL;
+    }
   }
   return 0;
 }
@@ -153,11 +175,13 @@ int main(void)
       ball.speed.y *= -1;
     }
 
-    if (CheckCollisionBallBrick(ball, bricks, 7) == SIDE)
+    int bounce = CheckCollisionBallBrick(ball, bricks, 7);
+
+    if (bounce == HORIZONTAL)
     {
       ball.speed.x *= -1;
     }
-    if (CheckCollisionBallBrick(ball, bricks, 7) == VERTICAL)
+    if (bounce == VERTICAL)
     {
       ball.speed.y *= -1;
     }
