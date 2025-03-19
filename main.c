@@ -22,10 +22,18 @@ typedef struct Ball
   Vector2 speed;
 } Ball;
 
+typedef struct Particle
+{
+  Vector2 pos;
+  Vector2 speed;
+  float lifetime;
+} Particle;
+
 typedef struct Brick
 {
   Rectangle Rec;
   int state;
+  Particle particles[];
 } Brick;
 
 const int screenWidth = 800;
@@ -88,7 +96,7 @@ int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
       continue;
     }
 
-    if (fabsf(dy - brick.height / 2.0f) / brick.height < fabsf(dx - brick.width / 2.0f) / brick.width)
+    if ( dx < brick.width/2.0f)
     {
       bricks[i].state = HIDE;
       return VERTICAL;
@@ -135,6 +143,20 @@ int main(void)
     bricks[i].Rec.width = 100;
     bricks[i].Rec.x = 20 + i * 110;
     bricks[i].Rec.y = 100;
+    int h = bricks[i].Rec.height;
+    int w = bricks[i].Rec.width;
+    Particle particles[h][w];
+    for (int j = 0; j < bricks[i].Rec.height; j++)
+    {
+      for (int k = 0; k < bricks[i].Rec.width; k++)
+      {
+        particles[j][k].pos.x = bricks[i].Rec.x + j;
+        particles[j][k].pos.y = bricks[i].Rec.y + k;
+        particles[j][k].lifetime = 3.0f;
+        particles[j][k].speed.x = 0.0f;
+        particles[j][k].speed.y = 0.0f;
+      }
+    }
   }
 
   InitWindow(screenWidth, screenHeight, "Breakout");
