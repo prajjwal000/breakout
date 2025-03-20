@@ -8,6 +8,7 @@
 #define VERTICAL 2
 #define HIDE 1
 #define SHOW 0
+#define PARTICLE 2
 
 typedef struct Paddle
 {
@@ -24,7 +25,7 @@ typedef struct Ball
 
 typedef struct Particle
 {
-  Vector2 pos;
+  Rectangle Rec;
   Vector2 speed;
   float lifetime;
 } Particle;
@@ -33,7 +34,7 @@ typedef struct Brick
 {
   Rectangle Rec;
   int state;
-  Particle particles[];
+  Particle **particles;
 } Brick;
 
 const int screenWidth = 800;
@@ -74,7 +75,7 @@ int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
 {
   for (int i = 0; i < n; i++)
   {
-    if (bricks[i].state == HIDE)
+    if (bricks[i].state == HIDE || bricks[i].state == PARTICLE)
     {
       continue;
     }
@@ -96,14 +97,14 @@ int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
       continue;
     }
 
-    if ( dx < brick.width/2.0f)
+    if (dx < brick.width / 2.0f)
     {
-      bricks[i].state = HIDE;
+      bricks[i].state = PARTICLE;
       return VERTICAL;
     }
     else
     {
-      bricks[i].state = HIDE;
+      bricks[i].state = PARTICLE;
       return HORIZONTAL;
     }
   }
@@ -126,6 +127,7 @@ int main(void)
   ball.pos.x = (screenWidth - ballRadius) / 2;
   ball.pos.y = (screenHeight - ballRadius) / 2;
   ball.radius = ballRadius;
+  srand(time(NULL));
   ball.speed.x = 200 + rand() % 20;
   ball.speed.y = 150 + rand() % 20;
   // Wall
@@ -145,18 +147,25 @@ int main(void)
     bricks[i].Rec.y = 100;
     int h = bricks[i].Rec.height;
     int w = bricks[i].Rec.width;
-    Particle particles[h][w];
+    Particle** particles = (Particle**)malloc(bricks[i].Rec.height * sizeof(Particle*));
+    // printf("Brick x: %2f y; %2f\n", bricks[i].Rec.x, bricks[i].Rec.y);
     for (int j = 0; j < bricks[i].Rec.height; j++)
     {
+            particles[j] = (Particle*)malloc(bricks[i].Rec.width * sizeof(Particle));
       for (int k = 0; k < bricks[i].Rec.width; k++)
       {
-        particles[j][k].pos.x = bricks[i].Rec.x + j;
-        particles[j][k].pos.y = bricks[i].Rec.y + k;
+        particles[j][k].Rec.x = bricks[i].Rec.x + j;
+        particles[j][k].Rec.y = bricks[i].Rec.y + k;
+        particles[j][k].Rec.height = 1;
+        particles[j][k].Rec.width = 1;
         particles[j][k].lifetime = 3.0f;
         particles[j][k].speed.x = 0.0f;
         particles[j][k].speed.y = 0.0f;
+        // printf("particle %d: %2f %2f \n", k, particles[j][k].pos.x, particles[j][k].pos.y);
       }
+      // printf("--------------------------------------------------\n");
     }
+    bricks[i].particles = particles;
   }
 
   InitWindow(screenWidth, screenHeight, "Breakout");
@@ -230,6 +239,16 @@ int main(void)
       if (bricks[i].state == SHOW)
       {
         DrawRectangleRec(bricks[i].Rec, RED);
+      }
+      if (bricks[i].state == PARTICLE)
+      {
+        for (int j = 0; j < bricks[i].Rec.height; j++)
+        {
+          for (int k = 0; k < bricks[i].Rec.width; k++)
+          {
+            DrawRectangleRec(bricks[i].particles[j][k].Rec, RED);
+          }
+        }
       }
     }
     DrawCircleV(ball.pos, ball.radius, GRAY);
