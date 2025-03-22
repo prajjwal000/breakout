@@ -44,72 +44,9 @@ const float genWidth = screenWidth / 80.0;
 const float paddleWidth = screenWidth / 5.0;
 const float ballRadius = screenWidth / 80.0;
 
-void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n)
-{
-  for (int i = 0; i < n; i++)
-  {
-    bricks[i].state = SHOW;
-  }
-  paddle->Rec.x = (screenWidth - paddleWidth) / 2;
-  paddle->Rec.y = screenHeight - genWidth;
-  ball->pos.x = (screenWidth - ballRadius) / 2;
-  ball->pos.y = (screenHeight - ballRadius) / 2;
-  ball->speed.x = (200 + rand() % 20) * (1 - 2 * (rand() % 2));
-  ball->speed.y = 150 + rand() % 20;
-  for (int i = 3; i > 0; i--)
-  {
-    time_t timer = time(NULL);
-    while (time(NULL) - timer < 1) // Wait for 1 second
-    {
-      BeginDrawing();
-      ClearBackground(LIGHTGRAY);
-      char buf[3]; // Buffer size should be enough for 2 digits and null terminator
-      sprintf(buf, "%d", i);
-      DrawText(buf, screenWidth / 2.0 - 10, screenHeight / 2.0 - 10, 40, GRAY);
-      EndDrawing();
-    }
-  }
-}
-
-int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
-{
-  for (int i = 0; i < n; i++)
-  {
-    if (bricks[i].state == HIDE || bricks[i].state == PARTICLE)
-    {
-      continue;
-    }
-
-    Rectangle brick = bricks[i].Rec;
-
-    float recCenterX = brick.x + brick.width / 2.0f;
-    float recCenterY = brick.y + brick.height / 2.0f;
-
-    float dx = fabsf(ball.pos.x - recCenterX);
-    float dy = fabsf(ball.pos.y - recCenterY);
-
-    if (dx > (brick.width / 2.0f + ball.radius))
-    {
-      continue;
-    }
-    if (dy > (brick.height / 2.0f + ball.radius))
-    {
-      continue;
-    }
-
-    if (dx < brick.width / 2.0f)
-    {
-      bricks[i].state = PARTICLE;
-      return VERTICAL;
-    }
-    else
-    {
-      bricks[i].state = PARTICLE;
-      return HORIZONTAL;
-    }
-  }
-  return 0;
-}
+void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n);
+int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n);
+void ParticleInit(Brick bricks[], int i);
 
 int main(void)
 {
@@ -147,15 +84,15 @@ int main(void)
     bricks[i].Rec.y = 100;
     int h = bricks[i].Rec.height;
     int w = bricks[i].Rec.width;
-    Particle** particles = (Particle**)malloc(bricks[i].Rec.height * sizeof(Particle*));
+    Particle **particles = (Particle **)malloc(bricks[i].Rec.height * sizeof(Particle *));
     // printf("Brick x: %2f y; %2f\n", bricks[i].Rec.x, bricks[i].Rec.y);
     for (int j = 0; j < bricks[i].Rec.height; j++)
     {
-            particles[j] = (Particle*)malloc(bricks[i].Rec.width * sizeof(Particle));
+      particles[j] = (Particle *)malloc(bricks[i].Rec.width * sizeof(Particle));
       for (int k = 0; k < bricks[i].Rec.width; k++)
       {
-        particles[j][k].Rec.x = bricks[i].Rec.x + j;
-        particles[j][k].Rec.y = bricks[i].Rec.y + k;
+        particles[j][k].Rec.x = bricks[i].Rec.x + k;
+        particles[j][k].Rec.y = bricks[i].Rec.y + j;
         particles[j][k].Rec.height = 1;
         particles[j][k].Rec.width = 1;
         particles[j][k].lifetime = 3.0f;
@@ -191,6 +128,30 @@ int main(void)
     else if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
     {
       paddle.speed = SPEED;
+    }
+
+    // Particle
+    //----------------------------------------------------------------------------------
+    for (int i = 0; i < 7; i++)
+    {
+      if (bricks[i].state == PARTICLE)
+      {
+
+        for (int j = 0; j < bricks[i].Rec.height; j++)
+        {
+          for (int k = 0; k < bricks[i].Rec.width; k++)
+          {
+            if (bricks[i].particles[j][k].lifetime < 0)
+            {
+              bricks[i].state = HIDE;
+            }
+            bricks[i].particles[j][k].Rec.x += bricks[i].particles[j][k].speed.x * delta;
+            bricks[i].particles[j][k].Rec.y += bricks[i].particles[j][k].speed.y * delta;
+            bricks[i].particles[j][k].lifetime -= delta;
+            printf("Particle lifetime: %.2f\n", delta);
+          }
+        }
+      }
     }
 
     // Collision
@@ -264,4 +225,89 @@ int main(void)
   //--------------------------------------------------------------------------------------
 
   return 0;
+}
+void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    bricks[i].state = SHOW;
+  }
+  paddle->Rec.x = (screenWidth - paddleWidth) / 2;
+  paddle->Rec.y = screenHeight - genWidth;
+  ball->pos.x = (screenWidth - ballRadius) / 2;
+  ball->pos.y = (screenHeight - ballRadius) / 2;
+  ball->speed.x = (200 + rand() % 20) * (1 - 2 * (rand() % 2));
+  ball->speed.y = 150 + rand() % 20;
+  for (int i = 3; i > 0; i--)
+  {
+    time_t timer = time(NULL);
+    while (time(NULL) - timer < 1) // Wait for 1 second
+    {
+      BeginDrawing();
+      ClearBackground(LIGHTGRAY);
+      char buf[3]; // Buffer size should be enough for 2 digits and null terminator
+      sprintf(buf, "%d", i);
+      DrawText(buf, screenWidth / 2.0 - 10, screenHeight / 2.0 - 10, 40, GRAY);
+      EndDrawing();
+    }
+  }
+}
+int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    if (bricks[i].state == HIDE || bricks[i].state == PARTICLE)
+    {
+      continue;
+    }
+
+    Rectangle brick = bricks[i].Rec;
+
+    float recCenterX = brick.x + brick.width / 2.0f;
+    float recCenterY = brick.y + brick.height / 2.0f;
+
+    float dx = fabsf(ball.pos.x - recCenterX);
+    float dy = fabsf(ball.pos.y - recCenterY);
+
+    if (dx > (brick.width / 2.0f + ball.radius))
+    {
+      continue;
+    }
+    if (dy > (brick.height / 2.0f + ball.radius))
+    {
+      continue;
+    }
+
+    if (dx < brick.width / 2.0f)
+    {
+      bricks[i].state = PARTICLE;
+      ParticleInit(bricks, i);
+      return VERTICAL;
+    }
+    else
+    {
+      bricks[i].state = PARTICLE;
+      ParticleInit(bricks, i);
+      return HORIZONTAL;
+    }
+  }
+  return 0;
+}
+
+void ParticleInit(Brick bricks[], int i)
+{
+
+  float CentreX = bricks[i].Rec.x + bricks[i].Rec.width / 2.0f;
+  float CentreY = bricks[i].Rec.y + bricks[i].Rec.height / 2.0f;
+
+  for (int j = 0; j < bricks[i].Rec.height; j++)
+  {
+    for (int k = 0; k < bricks[i].Rec.width; k++)
+    {
+      bricks[i].particles[j][k].speed.x =
+          fabsf(CentreX - bricks[i].particles[j][k].Rec.x) / bricks[i].particles[j][k].Rec.width;
+      bricks[i].particles[j][k].speed.y =
+          fabsf(CentreY - bricks[i].particles[j][k].Rec.y) / bricks[i].particles[j][k].Rec.height;
+    }
+  }
 }
