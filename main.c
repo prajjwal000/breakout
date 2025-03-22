@@ -9,11 +9,15 @@
 #define HIDE 1
 #define SHOW 0
 #define PARTICLE 2
+#define HARD 1
+#define SOFT 2
 
 typedef struct Paddle
 {
   Rectangle Rec;
   float speed;
+  int score;
+  int lives;
 } Paddle;
 
 typedef struct Ball
@@ -44,7 +48,7 @@ const float genWidth = screenWidth / 80.0;
 const float paddleWidth = screenWidth / 5.0;
 const float ballRadius = screenWidth / 80.0;
 
-void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n);
+void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n, int type);
 int CheckCollisionBallBrick(Ball ball, Brick bricks[], int n);
 void ParticleInit(Brick bricks[], int i);
 
@@ -52,6 +56,7 @@ int main(void)
 {
   // Initialization
   //--------------------------------------------------------------------------------------
+  int HIGHSCORE = 0;
   // Paddle
   Paddle paddle = {0};
   paddle.Rec.x = (screenWidth - paddleWidth) / 2;
@@ -59,6 +64,8 @@ int main(void)
   paddle.Rec.width = paddleWidth;
   paddle.Rec.height = genWidth;
   paddle.speed = 0;
+  paddle.score = 0;
+  paddle.lives = 3;
   // Ball
   Ball ball = {0};
   ball.pos.x = (screenWidth - ballRadius) / 2;
@@ -95,7 +102,7 @@ int main(void)
         particles[j][k].Rec.y = bricks[i].Rec.y + j;
         particles[j][k].Rec.height = 1;
         particles[j][k].Rec.width = 1;
-        particles[j][k].lifetime = 3.0f;
+        particles[j][k].lifetime = 0.4f;
         particles[j][k].speed.x = 0.0f;
         particles[j][k].speed.y = 0.0f;
         // printf("particle %d: %2f %2f \n", k, particles[j][k].pos.x, particles[j][k].pos.y);
@@ -119,7 +126,26 @@ int main(void)
     //----------------------------------------------------------------------------------
     if (IsKeyDown(KEY_R))
     {
-      Reset(&ball, &paddle, bricks, 7);
+      if (paddle.score > HIGHSCORE)
+      {
+        HIGHSCORE = paddle.score;
+      }
+      Reset(&ball, &paddle, bricks, 7, HARD);
+    }
+    if (ball.pos.y >= screenHeight)
+    {
+      if (paddle.lives < 2)
+      {
+        if (paddle.score > HIGHSCORE)
+        {
+          HIGHSCORE = paddle.score;
+        }
+        Reset(&ball, &paddle, bricks, 7, HARD);
+      }
+      else
+      {
+        Reset(&ball, &paddle, bricks, 7, SOFT);
+      }
     }
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
     {
@@ -148,7 +174,7 @@ int main(void)
             bricks[i].particles[j][k].Rec.x += bricks[i].particles[j][k].speed.x * delta;
             bricks[i].particles[j][k].Rec.y += bricks[i].particles[j][k].speed.y * delta;
             bricks[i].particles[j][k].lifetime -= delta;
-            printf("Particle lifetime: %.2f\n", delta);
+            // printf("Particle lifetime: %.2f\n", delta);
           }
         }
       }
@@ -172,10 +198,12 @@ int main(void)
     if (bounce == HORIZONTAL)
     {
       ball.speed.x *= -1;
+      paddle.score++;
     }
     if (bounce == VERTICAL)
     {
       ball.speed.y *= -1;
+      paddle.score++;
     }
 
     paddle.Rec.x += paddle.speed * delta;
@@ -212,6 +240,9 @@ int main(void)
         }
       }
     }
+    DrawText(TextFormat("SCORE: %i", paddle.score), 20, 20, 28, GREEN);
+    DrawText(TextFormat("LIVES: %i", paddle.lives), 20, 50, 28, GREEN);
+    DrawText(TextFormat("HIGH SCORE: %i", HIGHSCORE), 500, 20, 28, GREEN);
     DrawCircleV(ball.pos, ball.radius, GRAY);
     DrawRectangleRec(paddle.Rec, DARKPURPLE);
 
@@ -226,11 +257,31 @@ int main(void)
 
   return 0;
 }
-void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n)
+void Reset(Ball *ball, Paddle *paddle, Brick *bricks, int n, int type)
 {
-  for (int i = 0; i < n; i++)
+  if (type == HARD)
   {
-    bricks[i].state = SHOW;
+    paddle->score = 0;
+    paddle->lives = 3;
+    for (int i = 0; i < n; i++)
+    {
+      bricks[i].state = SHOW;
+      for (int j = 0; j < bricks[i].Rec.height; j++)
+      {
+        for (int k = 0; k < bricks[i].Rec.width; k++)
+        {
+          bricks[i].particles[j][k].Rec.x = bricks[i].Rec.x + k;
+          bricks[i].particles[j][k].Rec.y = bricks[i].Rec.y + j;
+          bricks[i].particles[j][k].lifetime = 0.4f;
+          bricks[i].particles[j][k].speed.x = 0.0f;
+          bricks[i].particles[j][k].speed.y = 0.0f;
+        }
+      }
+    }
+  }
+  if (type == SOFT)
+  {
+    paddle->lives -= 1;
   }
   paddle->Rec.x = (screenWidth - paddleWidth) / 2;
   paddle->Rec.y = screenHeight - genWidth;
@@ -305,9 +356,25 @@ void ParticleInit(Brick bricks[], int i)
     for (int k = 0; k < bricks[i].Rec.width; k++)
     {
       bricks[i].particles[j][k].speed.x =
-          fabsf(CentreX - bricks[i].particles[j][k].Rec.x) / bricks[i].particles[j][k].Rec.width;
+          (bricks[i].particles[j][k].Rec.x - CentreX) / bricks[i].particles[j][k].Rec.width;
       bricks[i].particles[j][k].speed.y =
-          fabsf(CentreY - bricks[i].particles[j][k].Rec.y) / bricks[i].particles[j][k].Rec.height;
+          (bricks[i].particles[j][k].Rec.y - CentreY) / bricks[i].particles[j][k].Rec.height;
+      // printf("%f %f\n", bricks[i].particles[j][k].speed.x, bricks[i].particles[j][k].speed.y);
     }
   }
 }
+// EXPERIMENTAL
+//  float brickX = bricks[i].particles[j][k].Rec.x;
+//  float brickY = bricks[i].particles[j][k].Rec.y;
+//  float sagittaX = fabs(CentreX - brickX);
+//  float sagittaY = fabs(CentreY - brickY);
+//  float disX = sqrtf(8 * bricks[i].Rec.width - sagittaX * sagittaX);
+//  float disY = sqrtf(8 * bricks[i].Rec.height - sagittaY * sagittaY);
+//  bricks[i].particles[j][k].speed.x = disX / bricks[i].particles[j][k].lifetime;
+//  bricks[i].particles[j][k].speed.y = disY / bricks[i].particles[j][k].lifetime;
+//        if (bricks[i].particles[j][k].Rec.x < CentreX) {
+//            bricks[i].particles[j][k].speed.x *= -1;
+//        }
+//        if (bricks[i].particles[j][k].Rec.y < CentreY) {
+//            bricks[i].particles[j][k].speed.y *= -1;
+//        }
